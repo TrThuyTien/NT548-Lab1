@@ -1,9 +1,11 @@
 # NT548.Q11 - Lab 1
 ## Group 09
-- Lê Trung Kiên - 23520797
-- Trần Thuận Thến - 23521471
-- Trần Lê Uyên Thy - 23521564
-- Trần Thị Thùy Tiên - 24521588
+|    MSSV   |      Họ và tên     | Công việc      |
+|-----------|--------------------|-------------   |
+|  23520797 | Lê Trung Kiên      | CloudFormation |
+|  23521588 | Trần Thị Thùy Tiên | CloudFormation |
+|  23521471 | Trần Thuận Thến    | Terraform      |
+|  23521564 | Trần Lê Uyên Thy   | Terraform      |
 ## Yêu cầu:
 - Các dịch vụ phải được viết dưới dạng module.
 - Phải đảm bảo an toàn bảo mật cho EC2 (thiết lập Security Groups).
