@@ -1,0 +1,129 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Resources:
+  # Tạo VPC
+  vpc-group09:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlocks: 10.0.0.0/16
+      EnableDnsSupport: 'true'
+      EnableDnsHostName: 'true'
+      Tags:
+        - Key: Name
+          Value: vpc-group09
+
+  # Tạo Internet Gateway
+  igw-group19: 
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags: 
+        - Key: Name
+          Value: igw-group09
+
+  # Gắn Internet Gateway vào VPC
+  attach-vpc-gateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: vpc-group09
+      InternetGatewayId:
+        Ref: iwg-group09
+
+  # Tạo Public subnet
+  public-subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: 
+        Ref: vpc-group09
+      CidrBlocks: 10.0.1.0/24
+      AvailabilityZone: "us-east-1a"
+      Tags: 
+        - Key: Name
+          Value: public-subnet
+
+  # Tạo Private subnet
+  private-subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: 
+        Ref: vpc-group09
+      CidrBlocks: 10.0.2.0/24
+      AvailabilityZone: "us-ease-1a"
+      Tags: 
+        - Key: Name
+          Value:  private-subnet
+  
+  # Tạo Public Routing Table
+  public-routing-table:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: 
+        Ref: vpc-group09
+      Tags:
+        - Key: Name
+          Value: public-routing-table
+  
+
+  # Kết nối Public Routing Table với Internet Gateway
+  route-to-igw:
+    Type: AWS::EC2::Route
+    DependsOn: GatewayToInternet
+    Properties:
+      RouteTableId:
+        Ref: public-routing-table
+      DestinationCidrBlocks: 0.0.0.0/0
+      GatewayId: 
+        Ref: iwg-group09
+
+  # Kết nối Public Subnet với Public Routing Table
+  associate-publicSubnet-publicRoutingTable:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: public-subnet
+      RouteTableId:
+        Ref: public-routing-table
+  
+  # Tạo Private Routing Table
+  private-routing-table:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: 
+        Ref: vpc-group19
+      Tags: 
+        - Key: Name
+          Value: private-routing-table
+  
+  # Kết nối Private Subnet tới Private Routing Table
+  associate-privateSubnet-privateRoutingTable:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: 
+        Ref: private-subnet
+      RouteTableId:
+        Ref: private-routing-table
+
+  # Tạo NAT Gateway và tạo route từ Private Routing Table tới NAT Gateway
+  nat-gw-group09: 
+    Type: AWS::EC2::NatGateway
+    Properties: 
+      SubnetId: 
+        Ref: public-subnet
+      AllocationId: !GetAtt nat-gateway-eip.AllocationId
+      Tags: 
+      - Key: Name
+        Value: nat-gw-group09
+  nat-gw-eip:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc-group09
+  route-nat-gateway:
+    Type: AWS::EC2::Route
+    Properties: 
+      RouteTableId: 
+        Ref: private-routing-table
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId:
+        Ref: nat-gateway
+
+      
