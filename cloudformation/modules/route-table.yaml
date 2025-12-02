@@ -8,7 +8,6 @@ Resources:
         - Key: Name
           Value: public-routing-table-group09
   
-
   # Kết nối Public Routing Table với Internet Gateway
   PublicRoutingTableIgw:
     Type: AWS::EC2::Route
