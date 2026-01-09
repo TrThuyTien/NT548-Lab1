@@ -2,22 +2,41 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: Create Security Groups
 
 Resources:
-  TargetSG:
+  PublicSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Security group allowing ssh
+      GroupDescription: Allows ssh from anywhere
       VpcId: !ImportValue Group09VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: 0.0.0.0/0  
-      Tags: 
+          CidrIp: 0.0.0.0/0
+      Tags:
         - Key: Name
-          Value: Group09_SG
+          Value: public-sg-group09
+
+  PrivateSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allows ssh from Public SG
+      VpcId: !ImportValue Group09VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          SourceSecurityGroupId: !Ref PublicSG  
+      Tags:
+        - Key: Name
+          Value: private-sg-group09
 
 Outputs:
-  TargetSG_ID: 
-    Value: !Ref TargetSG
+  PublicSGID: 
+    Value: !Ref PublicSG
     Export: 
-      Name: Group09_SG_ID
+      Name: Group09PublicSGID
+
+  PrivateSGID:
+    Value: !Ref PrivateSG
+    Export: 
+      Name: Group09PrivateSGID
