@@ -7,6 +7,36 @@ Parameters:
     Description: URL folder S3 chua cac file yaml
     Default: https://nt548-cloudformation.s3.us-east-1.amazonaws.com/modules
 
+  # Khai báo vùng mạng vpc
+  VpcCIDR:
+    Description: IP range for vpc-group09
+    Type: String
+    Default: 10.9.0.0/16
+
+  # Khai báo dãy địa chỉ ip cho public subnet
+  PublicSubnetCidr:
+    Description: IP range for public subnet
+    Type: String
+    Default: 10.9.1.0/24
+
+  # Khai báo dãy địa chỉ ip cho private subnet
+  PrivateSubnetCidr:
+    Description: IP range for private subnet
+    Type: String
+    Default: 10.9.2.0/24
+
+  # Vùng triển khai vpc
+  Zone:
+    Description: zone that group09 deploy
+    Type: String
+    Default: "us-east-1a"
+
+  # Khai báo tên nhóm, bài lab thực hiện
+  ProjectName:
+    Description: name of group and lab
+    Type: String
+    Default: "group09-lab01" 
+
   KeyName:
     Description: Name of an existing EC2 KeyPair to enable SSH access
     Type: AWS::EC2::KeyPair::KeyName
@@ -38,16 +68,25 @@ Resources:
     Properties:
       TemplateURL: !Sub "${TemplateBaseURL}/vpc.yaml"
       Parameters:
-        VpcCIDR: 10.9.0.0/16
-        PublicSubnetCidr: 10.9.1.0/24
-        PrivateSubnetCidr: 10.9.2.0/24
-        Zone: us-east-1a
+        VpcCIDR: !Ref VpcCIDR
+        PublicSubnetCidr: !Ref PublicSubnetCidr
+        PrivateSubnetCidr: !Ref PrivateSubnetCidr
+        Zone: !Ref Zone
+        ProjectName: !Ref ProjectName
+
 
   RouteTablesStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: VPCStack
     Properties:
       TemplateURL: !Sub "${TemplateBaseURL}/route-table.yaml"
+      Parameters: 
+        VpcId: !GetAtt VPCStack.Outputs.VpcId
+        IgwId: !GetAtt VPCStack.Outputs.IgwId
+        PublicSubnetId: !GetAtt VPCStack.Outputs.PublicSubnetId
+        PrivateSubnetId: !GetAtt VPCStack.Outputs.PrivateSubnetId
+        ProjectName: !Ref ProjectName
+  
   
   SecurityGroupsStack:
     Type: AWS::CloudFormation::Stack
@@ -63,6 +102,10 @@ Resources:
     DependsOn: RouteTablesStack 
     Properties:
       TemplateURL: !Sub "${TemplateBaseURL}/nat-gateway.yaml"
+      Parameters: 
+        PublicSubnetId: !GetAtt VPCStack.Outputs.PublicSubnetId
+        PrivateRTId: !GetAtt RouteTablesStack.Outputs.PrivateRTId
+        ProjectName: !Ref ProjectName
 
   EC2Stack:
     Type: AWS::CloudFormation::Stack

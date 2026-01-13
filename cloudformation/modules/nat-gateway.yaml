@@ -1,3 +1,26 @@
+####################################################
+#              KHAI BAO CAC BIEN                   #
+####################################################
+Parameters:
+  # Khai báo giá trị dãy địa chỉ ip cho public subnet
+  PublicSubnetId:
+    Description: Subnet ID of public subnet
+    Type: String
+
+  # Khai báo giá trị id của Private Route table
+  PrivateRTId:
+    Description: Route table ID for private subnet
+    Type: String
+
+  # Khai báo tên nhóm, bài lab thực hiện
+  ProjectName:
+    Description: name of group and lab
+    Type: String
+
+
+##########################################
+#    LẤY CÁC TÀI NGUYÊN SAU KHI TẠO      #
+########################################## 
 Resources:
   # Tạo NAT Gateway và tạo route từ Private Routing Table tới NAT Gateway
   NATGatewayEIP:
@@ -5,16 +28,17 @@ Resources:
     Properties:
       Domain: "vpc"
   NATGateway:
-   Type: AWS::EC2::NatGateway
-   Properties:
+    Type: AWS::EC2::NatGateway
+    Properties:
       AllocationId: !GetAtt NATGatewayEIP.AllocationId
-      SubnetId: !ImportValue Group09PublicSubnetId
+      SubnetId: !Ref PublicSubnetId
       Tags:
         - Key: Name
-          Value: nat-gateway-group09
+          Value: !Sub "${ProjectName}-nat"
   RouteNATGateway:
     Type: AWS::EC2::Route
+    DependsOn: NATGateway
     Properties:
-      RouteTableId: !ImportValue Group09PrivateRTId
+      RouteTableId: !Ref PrivateRTId
       DestinationCidrBlock: '0.0.0.0/0'
       NatGatewayId: !Ref NATGateway

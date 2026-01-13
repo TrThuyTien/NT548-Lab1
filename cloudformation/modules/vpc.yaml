@@ -1,25 +1,35 @@
+####################################################
+#              KHAI BAO CAC BIEN                   #
+####################################################
 Parameters:
-  # vpc cidr
+  # Khai báo vùng mạng vpc
   VpcCIDR:
     Description: IP range for vpc-group09
     Type: String
-    Default: 10.9.0.0/16
-  # ip range for public subnet
+
+  # Khai báo dãy địa chỉ ip cho public subnet
   PublicSubnetCidr:
     Description: IP range for public subnet
     Type: String
-    Default: 10.9.1.0/24
-  # ip range for private subnet
+
+  # Khai báo dãy địa chỉ ip cho private subnet
   PrivateSubnetCidr:
     Description: IP range for private subnet
     Type: String
-    Default: 10.9.2.0/24
-  # zone for subnets
+
+  # Vùng triển khai vpc
   Zone:
     Description: zone that group09 deploy
     Type: String
-    Default: "us-east-1a"
 
+  # Khai báo tên nhóm, bài lab thực hiện
+  ProjectName:
+    Description: name of group and lab
+    Type: String
+
+
+####################################################
+#                  KHỞI TẠO RESOURCE               #
 ####################################################
 Resources:
   # tạo vpc
@@ -30,7 +40,7 @@ Resources:
       EnableDnsSupport: true
       Tags:
         - Key: Name
-          Value: vpc-group09
+          Value: !Sub "${ProjectName}-vpc"
 
 
   # tạo internet gateway
@@ -39,7 +49,7 @@ Resources:
     Properties:
       Tags: 
         - Key: Name
-          Value: igw-group09
+          Value: !Sub "${ProjectName}-iwg"
 
   # gắn internet gateway vào vpc
   AttachVpcGateway:
@@ -60,7 +70,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags: 
         - Key: Name
-          Value: public-subnet-group09
+          Value: !Sub "${ProjectName}-public-subnet"
 
   # tạo private subnet
   PrivateSubnet:
@@ -72,25 +82,31 @@ Resources:
       AvailabilityZone: !Ref Zone
       Tags: 
         - Key: Name
-          Value: private-subnet-group09
+          Value: !Sub "${ProjectName}-private-subnet"
 
-#########################################333
+##########################################
+#    LẤY CÁC TÀI NGUYÊN SAU KHI TẠO      #
+##########################################
 Outputs:
+  # Lấy giá trị VPC
   VpcId: 
     Value: !Ref Vpc
     Export: 
       Name: Group09VpcId
 
+  # Lấy giá trị IWG
   IgwId: 
     Value: !Ref Igw
     Export: 
       Name: Group09IgwId
       
+  # Lấy giá trị Public Subnet ID
   PublicSubnetId: 
     Value: !Ref PublicSubnet
     Export: 
       Name: Group09PublicSubnetId
 
+  # Lấy giá trị Private Subnet ID
   PrivateSubnetId: 
     Value: !Ref PrivateSubnet
     Export:
