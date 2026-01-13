@@ -1,2 +1,90 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Main CloudFormation Template
+Description: Root Stack - Deploy Group09 Infrastructure (VPC, Route, SG, NAT, EC2) using Nested Stacks
+
+Parameters:
+  TemplateBaseURL:
+    Type: String
+    Description: URL folder S3 chua cac file yaml
+    Default: https://nt548-cloudformation.s3.us-east-1.amazonaws.com/modules
+
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: 2352xxxx
+
+  AllowedSSHIP:
+    Description: IP to ssh
+    Type: String
+    Default: 0.0.0.0/0
+
+  AmiId:
+    Description: AMI ID for EC2 Instances
+    Type: AWS::EC2::Image::Id
+    Default: ami-0c398cb65a93047f2  # Amazon Linux 2 in us-east-1
+
+  InstanceType:
+    Description: EC2 Instance Type
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+    ConstraintDescription: must be a valid EC2 instance type.
+
+Resources:
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateBaseURL}/vpc.yaml"
+      Parameters:
+        VpcCIDR: 10.9.0.0/16
+        PublicSubnetCidr: 10.9.1.0/24
+        PrivateSubnetCidr: 10.9.2.0/24
+        Zone: us-east-1a
+
+  RouteTablesStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: VPCStack
+    Properties:
+      TemplateURL: !Sub "${TemplateBaseURL}/route-table.yaml"
+  
+  SecurityGroupsStack:
+    Type: AWS::CloudFormation::Stack
+    # DependsOn: VPCStack
+    Properties:
+      TemplateURL: !Sub "${TemplateBaseURL}/security-group.yaml"
+      Parameters:
+        VpcId: !GetAtt VPCStack.Outputs.VpcId 
+        SshCidr: !Ref AllowedSSHIP
+
+  NATStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: RouteTablesStack 
+    Properties:
+      TemplateURL: !Sub "${TemplateBaseURL}/nat-gateway.yaml"
+
+  EC2Stack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: NATStack
+    Properties:
+      TemplateURL: !Sub "${TemplateBaseURL}/ec2.yaml"
+      Parameters:
+        MyKeyPair: !Ref KeyName
+        AmiId: !Ref AmiId
+        InstanceType: !Ref InstanceType
+        PublicSubnetId: !GetAtt VPCStack.Outputs.PublicSubnetId
+        PrivateSubnetId: !GetAtt VPCStack.Outputs.PrivateSubnetId
+        PublicSGID: !GetAtt SecurityGroupsStack.Outputs.PublicSGID
+        PrivateSGID: !GetAtt SecurityGroupsStack.Outputs.PrivateSGID
+        PublicInstanceName: ec2-public-group09
+        PrivateInstanceName: ec2-private-group09
+
+Outputs:
+  StackVPCID:
+    Description: VPC ID Created
+    Value: !GetAtt VPCStack.Outputs.VpcId
+  
+  StackPublicSG:
+    Description: Public Security Group ID
+    Value: !GetAtt SecurityGroupsStack.Outputs.PublicSGID

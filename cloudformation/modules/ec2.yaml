@@ -5,39 +5,63 @@ Parameters:
   MyKeyPair:
     Description: Chon Key Pair de SSH vao EC2
     Type: AWS::EC2::KeyPair::KeyName
-    Default: 2352xxxx
+
+  AmiId:
+    Description: AMI ID for EC2 Instances
+    Type: AWS::EC2::Image::Id
+
+  PublicSubnetId:
+    Description: Subnet ID for Public EC2
+    Type: AWS::EC2::Subnet::Id
+  
+  PrivateSubnetId:
+    Description: Subnet ID for Private EC2
+    Type: AWS::EC2::Subnet::Id
+
+  PublicSGID:
+    Description: Security Group ID for Public EC2
+    Type: AWS::EC2::SecurityGroup::Id
+
+  PrivateSGID:
+    Description: Security Group ID for Private EC2
+    Type: AWS::EC2::SecurityGroup::Id
+
+  InstanceType:
+    Description: EC2 Instance Type
+    Type: String
+
+  PublicInstanceName:
+    Description: Name tag for Public EC2 Instance
+    Type: String
+
+  PrivateInstanceName:
+    Description: Name tag for Private EC2 Instance
+    Type: String
 
 Resources:
   Ec2Public:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: ami-0c398cb65a93047f2
-      InstanceType: t2.micro
+      ImageId: !Ref AmiId
+      InstanceType: !Ref InstanceType
       KeyName: !Ref MyKeyPair
-      NetworkInterfaces: 
-        - AssociatePublicIpAddress: "true"
-          DeviceIndex: "0"
-          SubnetId: !ImportValue Group09PublicSubnetId
-          GroupSet: 
-            - !ImportValue Group09PublicSGID
+      SubnetId: !Ref PublicSubnetId
+      SecurityGroupIds: 
+        - !Ref PublicSGID
       Tags:
         - Key: Name
-          Value: ec2-public-group09
+          Value: !Ref PublicInstanceName
 
   Ec2Private:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: ami-0c398cb65a93047f2
-      InstanceType: t2.micro
+      ImageId: !Ref AmiId
+      InstanceType: !Ref InstanceType
       KeyName: !Ref MyKeyPair
-      NetworkInterfaces: 
-        - AssociatePublicIpAddress: "false"  
-          DeviceIndex: "0"
-          DeleteOnTermination: "true"
-          SubnetId: !ImportValue Group09PrivateSubnetId 
-          GroupSet: 
-            - !ImportValue Group09PrivateSGID
+      SubnetId: !Ref PrivateSubnetId
+      SecurityGroupIds: 
+        - !Ref PrivateSGID
       Tags:
         - Key: Name
-          Value: ec2-private-group09
+          Value: !Ref PrivateInstanceName
   
