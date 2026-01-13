@@ -1,44 +1,84 @@
+####################################################
+#              KHAI BAO CAC BIEN                   #
+####################################################
+Parameters:
+  # Khai báo giá trị dãy địa chỉ ip của Vpc
+  VpcId:
+    Description: VPC ID of vpc-group09
+    Type: String
+
+  # Khai báo giá trị dãy địa chỉ ip cho public subnet
+  PublicSubnetId:
+    Description: IP range of public subnet
+    Type: String
+
+  # Khai báo giá trị dãy địa chỉ ip cho private subnet
+  PrivateSubnetId:
+    Description: IP range of private subnet
+    Type: String
+
+  # Giá trị Igw được tạo 
+  IgwId:
+    Description: IgwId
+    Type: String
+
+  # Khai báo tên nhóm, bài lab thực hiện
+  ProjectName:
+    Description: name of group and lab
+    Type: String
+    
+
+####################################################
+#                  KHỞI TẠO RESOURCE               #
+####################################################
 Resources:
   # Tạo Public Routing Table
   PublicRoutingTable:
     Type: AWS::EC2::RouteTable
     Properties:
-      VpcId: !ImportValue Group09VpcId
+      VpcId: !Ref VpcId
       Tags:
         - Key: Name
-          Value: public-routing-table-group09
+          Value: !Sub "${ProjectName}-rt-public"
   
   # Kết nối Public Routing Table với Internet Gateway
   PublicRoutingTableIgw:
     Type: AWS::EC2::Route
+    DependsOn: PublicRoutingTable
     Properties:
       RouteTableId: !Ref PublicRoutingTable
       DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: !ImportValue Group09IgwId
+      GatewayId: !Ref IgwId
 
   # Kết nối Public Subnet với Public Routing Table
   AssociatePublicSubnetPublicRoutingTable:
     Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn: PublicRoutingTable
     Properties:
-      SubnetId: !ImportValue Group09PublicSubnetId
+      SubnetId: !Ref PublicSubnetId
       RouteTableId: !Ref PublicRoutingTable
   
   # Tạo Private Routing Table
   PrivateRoutingTable:
     Type: AWS::EC2::RouteTable
     Properties:
-      VpcId: !ImportValue Group09VpcId
+      VpcId: !Ref VpcId
       Tags: 
         - Key: Name
-          Value: private-routing-table-group09
+          Value: !Sub "${ProjectName}-rt-private"
   
   # Kết nối Private Subnet tới Private Routing Table
   AssociatePrivateSubnetPrivateRoutingTable:
     Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn: PrivateRoutingTable
     Properties:
-      SubnetId: !ImportValue Group09PrivateSubnetId
+      SubnetId: !Ref PrivateSubnetId
       RouteTableId: !Ref PrivateRoutingTable
-    
+
+
+##########################################
+#    LẤY CÁC TÀI NGUYÊN SAU KHI TẠO      #
+##########################################  
 Outputs: 
   PublicRTId: 
     Value: !Ref PublicRoutingTable
